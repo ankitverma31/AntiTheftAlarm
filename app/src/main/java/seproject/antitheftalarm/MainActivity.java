@@ -1,23 +1,21 @@
 package seproject.antitheftalarm;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.SwitchCompat;
-import android.util.FloatMath;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -33,8 +31,10 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import static java.lang.StrictMath.sqrt;
 import static seproject.antitheftalarm.R.id.info;
+import static seproject.antitheftalarm.SetPin.MyPREFERENCES;
 
 
 public class MainActivity extends AppCompatActivity
@@ -43,18 +43,18 @@ public class MainActivity extends AppCompatActivity
     CountDownTimer cdt;
     private SensorManager sensorMan;
     private Sensor accelerometer;
-
-    private Boolean prevState;
-
-
     private float[] mGravity;
     private float mAccel;
     private float mAccelCurrent;
     private float mAccelLast;
     AlertDialog alertDialog;
+    Intent intent;
+
+//    SharedPreferences sharedpreferences;
+
 
     int mSwitchSet = 0;
-    int chargerFlag = 0;
+    int chargerFlag, chargerFlag1, chargerFlag2 = 0;
 
 
     @Override
@@ -75,18 +75,27 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        prevState = false;
+
+
 
         chargerSwitch = (Switch) findViewById(R.id.sCharger);
+
+//        sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+//        String password = sharedpreferences.getString("passwordKey","");
+//        Toast.makeText(getApplicationContext(), "email:"+password, Toast.LENGTH_SHORT).show();
+
+
         BroadcastReceiver receiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
+                int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
 
-                int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                Boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                        status == BatteryManager.BATTERY_STATUS_FULL;
-                if(prevState!=isCharging) {
-                    Toast.makeText(context, "IsCharging" + isCharging, Toast.LENGTH_SHORT).show();
-                    prevState = isCharging;
+                if (plugged == BatteryManager.BATTERY_PLUGGED_AC) {
+                    chargerFlag = 1;
+                } else if (plugged == 0) {
+                    chargerFlag1 = 1;
+                    chargerFlag = 0;
+                    func();
+
                 }
             }
         };
@@ -100,19 +109,26 @@ public class MainActivity extends AppCompatActivity
                                          boolean isChecked) {
 
                 if (isChecked) {
-                    Toast.makeText(MainActivity.this, "Charger Switch On", Toast.LENGTH_SHORT).show();
+
+                    if (chargerFlag != 1) {
+                        Toast.makeText(MainActivity.this, "Connect To Charger", Toast.LENGTH_SHORT).show();
+                        chargerSwitch.setChecked(false);
+                    } else {
+                        Toast.makeText(MainActivity.this, "Charger Protection Mode On", Toast.LENGTH_SHORT).show();
+                        chargerFlag2 = 1;
+                        func();
+                    }
+
 
                 } else {
-                    Toast.makeText(MainActivity.this, "Charger Switch Off", Toast.LENGTH_SHORT).show();
+                    chargerFlag2 = 0;
+
+//                    Toast.makeText(MainActivity.this, "Charger Switch Off", Toast.LENGTH_SHORT).show();
+//                    chargerFlag=0;
                 }
 
             }
         });
-
-
-
-        /*chargerFlag = 0;
-        Toast.makeText(MainActivity.this, chargerFlag, Toast.LENGTH_SHORT).show();*/
 
 
         alertDialog = new AlertDialog.Builder(this).create();
@@ -121,12 +137,12 @@ public class MainActivity extends AppCompatActivity
 
         //alertDialog.show();
 
-        sensorMan = (SensorManager)getSystemService(SENSOR_SERVICE);
+        sensorMan = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorMan.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mAccel = 0.00f;
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
         mAccelLast = SensorManager.GRAVITY_EARTH;
-        AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 20, 0);
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
@@ -149,7 +165,7 @@ public class MainActivity extends AppCompatActivity
                     cdt = new CountDownTimer(10000, 1000) {
                         @Override
                         public void onTick(long millisUntilFinished) {
-                            alertDialog.setMessage("00:"+ (millisUntilFinished/1000));
+                            alertDialog.setMessage("00:" + (millisUntilFinished / 1000));
                         }
 
                         @Override
@@ -163,7 +179,6 @@ public class MainActivity extends AppCompatActivity
                     }.start();
                     alertDialog.show();
                     alertDialog.setCancelable(false);
-
 
 
                 } else {
@@ -191,9 +206,6 @@ public class MainActivity extends AppCompatActivity
         });
 
 
-
-
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -214,6 +226,16 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
+    public void func() {
+//        Toast.makeText(MainActivity.this, "ChargerFlag"+chargerFlag+"Chargerflag1:"+chargerFlag1, Toast.LENGTH_SHORT).show();
+        if (chargerFlag == 0 && chargerFlag1 == 1 && chargerFlag2 == 1) {
+            startActivity(new Intent(MainActivity.this, EnterPin.class));
+            chargerFlag2 = 0;
+            finish();
+        }
+
+
+    }
 
     @Override
     public void onBackPressed() {
@@ -224,7 +246,6 @@ public class MainActivity extends AppCompatActivity
             super.onBackPressed();
         }
     }
-
 
 
     @Override
@@ -243,8 +264,7 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            startActivity(new Intent(MainActivity.this, SetPin.class));
-            finish();
+            startActivity(new Intent(MainActivity.this, ResetPin.class));
 
 
         }
@@ -302,7 +322,7 @@ public class MainActivity extends AppCompatActivity
 
             }
         }
-        }
+    }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {

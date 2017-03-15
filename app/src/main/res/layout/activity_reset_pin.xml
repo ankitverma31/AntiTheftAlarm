@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_set_pin"
+    android:id="@+id/activity_reset_pin"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="@dimen/activity_vertical_margin"
@@ -9,7 +9,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:focusableInTouchMode="true"
-    tools:context="seproject.antitheftalarm.SetPin">
+    tools:context="seproject.antitheftalarm.ResetPin">
 
     <android.support.design.widget.TextInputLayout
         android:id="@+id/input_layout_email"
@@ -20,11 +20,12 @@
         android:layout_marginBottom="54dp">
 
         <EditText
-            android:id="@+id/etEmail"
+            android:id="@+id/etOldPin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"
-            android:hint="Email Address" />
+            android:inputType="numberPassword"
+            android:maxLength="4"
+            android:hint="Old Pin" />
     </android.support.design.widget.TextInputLayout>
 
     <android.support.design.widget.TextInputLayout
@@ -41,7 +42,7 @@
             android:layout_height="wrap_content"
             android:inputType="numberPassword"
             android:maxLength="4"
-            android:hint="Set Pin" />
+            android:hint="New Pin" />
     </android.support.design.widget.TextInputLayout>
 
 
@@ -59,14 +60,14 @@
             android:layout_height="wrap_content"
             android:inputType="numberPassword"
             android:maxLength="4"
-            android:hint="Confirm Pin"
+            android:hint="Confirm New Pin"
             android:layout_below="@+id/input_layout_password"
             android:layout_alignParentStart="true"
             android:layout_marginTop="29dp" />
     </android.support.design.widget.TextInputLayout>
 
     <Button
-        android:text="SET"
+        android:text="RESET"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/btnSetPin"
@@ -74,6 +75,16 @@
         android:layout_below="@+id/input_layout_password_confirm"
         android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true" />
+
+    <Button
+        android:id="@+id/btnForgotOldPin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/btnSetPin"
+        android:elevation="10dp"
+        android:text="Forgot Old Pin?" />
 
 
 </RelativeLayout>
