@@ -11,11 +11,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
-
 import static seproject.antitheftalarm.SetPin.MyPREFERENCES;
 
-public class ForgotPin extends AppCompatActivity {
+public class ForgotPin extends AppCompatActivity implements View.OnClickListener {
     SharedPreferences sharedpreferences;
     EditText etEmail;
     Button btnSendPin;
@@ -24,41 +22,33 @@ public class ForgotPin extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_pin);
+        etEmail = (EditText) findViewById(R.id.etEmail);
+        btnSendPin = (Button)findViewById(R.id.btnSendPin);
+        btnSendPin.setOnClickListener(this);
+    }
+    private void sendEmail() {
         sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
         final String email = sharedpreferences.getString("emailKey", "");
         final String pin = sharedpreferences.getString("passwordKey", "");
-
-        etEmail = (EditText) findViewById(R.id.etEmail);
-        btnSendPin = (Button)findViewById(R.id.btnSendPin);
-//        Boolean online = isOnline();
+        String subject = "Anti-Theft Alarm";
+        String message ="Your Pin: "+pin;
         final InputMethodManager inputManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        btnSendPin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String enteredEmail = etEmail.getText().toString();
+        String enteredEmail = etEmail.getText().toString();
                 if(enteredEmail.equals(email)){
+                    SendMail sm = new SendMail(this, email, subject, message);
+                    sm.execute();
                     inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
                             InputMethodManager.HIDE_NOT_ALWAYS);
-                    Toast.makeText(ForgotPin.this, "Old Pin: "+pin, Toast.LENGTH_LONG).show();
-
-//                    Toast.makeText(ForgotPin.this, "Password sent to "+email, Toast.LENGTH_SHORT).show();
                     etEmail.getText().clear();
                 }
                 else {
                     etEmail.setError("Invalid!");
                 }
-            }
-        });
-
-//        Toast.makeText(ForgotPin.this, "Email"+email, Toast.LENGTH_SHORT).show();
     }
-//    public boolean isOnline() {
-//        ConnectivityManager cm =
-//                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-//        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-//        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-//            return true;
-//        }
-//        return false;
-//    }
+
+    @Override
+    public void onClick(View v) {
+        sendEmail();
+
+    }
 }

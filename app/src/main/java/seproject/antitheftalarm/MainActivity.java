@@ -1,5 +1,6 @@
 package seproject.antitheftalarm;
 
+import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,7 @@ import android.media.AudioManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.PowerManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
@@ -32,59 +34,74 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import static java.lang.StrictMath.sqrt;
-import static seproject.antitheftalarm.R.id.info;
-import static seproject.antitheftalarm.SetPin.MyPREFERENCES;
-
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, SensorEventListener {
     Switch motionSwitch, proximitySwitch, chargerSwitch;
     CountDownTimer cdt;
     private SensorManager sensorMan;
+    private SensorManager mSensorManager;
+    private Sensor mSensor;
     private Sensor accelerometer;
     private float[] mGravity;
     private float mAccel;
     private float mAccelCurrent;
     private float mAccelLast;
     AlertDialog alertDialog;
-    Intent intent;
+    private static final int SENSOR_SENSITIVITY = 4;
+//    PowerManager.WakeLock fullWakeLock,partialWakeLock;
+
+
 
 //    SharedPreferences sharedpreferences;
 
 
-    int mSwitchSet = 0;
+    int mSwitchSet,pSwitchSet = 0;
     int chargerFlag, chargerFlag1, chargerFlag2 = 0;
 
 
     @Override
     public void onResume() {
         super.onResume();
+//        if(fullWakeLock.isHeld()){
+//            fullWakeLock.release();
+//        }
+//        if(partialWakeLock.isHeld()){
+//            partialWakeLock.release();
+//        }
+//        sensorMan.unregisterListener(this);
+//        mSensorManager.unregisterListener(this);
         sensorMan.registerListener(this, accelerometer,
                 SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mSensor,
+                SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        sensorMan.unregisterListener(this);
+                sensorMan.unregisterListener(this);
+        mSensorManager.unregisterListener(this);
+//                sensorMan.registerListener(this, accelerometer,
+//                SensorManager.SENSOR_DELAY_UI);
+//        mSensorManager.registerListener(this, mSensor,
+//                SensorManager.SENSOR_DELAY_NORMAL);
+//        partialWakeLock.acquire();
+//        sensorMan.unregisterListener(this);
+//        mSensorManager.unregisterListener(this);
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        sensorMan = (SensorManager) getSystemService(SENSOR_SERVICE);
+        accelerometer = sensorMan.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        alertDialog = new AlertDialog.Builder(this).create();
         chargerSwitch = (Switch) findViewById(R.id.sCharger);
-
-//        sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
-//        String password = sharedpreferences.getString("passwordKey","");
-//        Toast.makeText(getApplicationContext(), "email:"+password, Toast.LENGTH_SHORT).show();
-
-
         BroadcastReceiver receiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
@@ -122,35 +139,21 @@ public class MainActivity extends AppCompatActivity
 
                 } else {
                     chargerFlag2 = 0;
-
-//                    Toast.makeText(MainActivity.this, "Charger Switch Off", Toast.LENGTH_SHORT).show();
-//                    chargerFlag=0;
                 }
 
             }
         });
 
-
-        alertDialog = new AlertDialog.Builder(this).create();
-        alertDialog.setTitle("Will Be Activated In 10 Seconds");
-        alertDialog.setMessage("00:10");
-
         //alertDialog.show();
 
-        sensorMan = (SensorManager) getSystemService(SENSOR_SERVICE);
-        accelerometer = sensorMan.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mAccel = 0.00f;
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
         mAccelLast = SensorManager.GRAVITY_EARTH;
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 20, 0);
-
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-
         motionSwitch = (Switch) findViewById(R.id.sMotion);
         motionSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
@@ -159,6 +162,8 @@ public class MainActivity extends AppCompatActivity
                                          boolean isChecked) {
 
                 if (isChecked) {
+                    alertDialog.setTitle("Will Be Activated In 10 Seconds");
+                    alertDialog.setMessage("00:10");
                     //Toast.makeText(MainActivity.this, "Motion Switch On", Toast.LENGTH_SHORT).show();
 
 
@@ -196,10 +201,33 @@ public class MainActivity extends AppCompatActivity
                                          boolean isChecked) {
 
                 if (isChecked) {
-                    Toast.makeText(MainActivity.this, "Proximity Switch On", Toast.LENGTH_SHORT).show();
+                    alertDialog.setTitle("Keep Phone In Your Pocket");
+                    alertDialog.setMessage("00:10");
+                    //Toast.makeText(MainActivity.this, "Motion Switch On", Toast.LENGTH_SHORT).show();
+
+
+                    cdt = new CountDownTimer(10000, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            alertDialog.setMessage("00:" + (millisUntilFinished / 1000));
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            //info.setVisibility(View.GONE);
+                            pSwitchSet = 1;
+                            alertDialog.hide();
+//                            Toast.makeText(MainActivity.this, "Motion Detection Mode Activated", Toast.LENGTH_SHORT).show();
+
+                        }
+                    }.start();
+                    alertDialog.show();
+                    alertDialog.setCancelable(false);
+
 
                 } else {
-                    Toast.makeText(MainActivity.this, "Proximity Switch Off", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Motion Switch Off", Toast.LENGTH_SHORT).show();
+                    pSwitchSet = 0;
                 }
 
             }
@@ -225,6 +253,23 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
+//    protected void createWakeLocks(){
+//        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+//        fullWakeLock = powerManager.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "Loneworker - FULL WAKE LOCK");
+//        partialWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Loneworker - PARTIAL WAKE LOCK");
+//    }
+//    public void wakeDevice() {
+//        fullWakeLock.acquire();
+//        KeyguardManager keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+//        KeyguardManager.KeyguardLock keyguardLock = keyguardManager.newKeyguardLock("TAG");
+//        keyguardLock.disableKeyguard();
+//    }
+
+
+
+
+
+
 
     public void func() {
 //        Toast.makeText(MainActivity.this, "ChargerFlag"+chargerFlag+"Chargerflag1:"+chargerFlag1, Toast.LENGTH_SHORT).show();
@@ -316,13 +361,28 @@ public class MainActivity extends AppCompatActivity
                 //MediaPlayer mPlayer = MediaPlayer.create(MainActivity.this, R.raw.siren);
                 //mPlayer.start();
                 if (mSwitchSet == 1) {
+//                    wakeDevice();
                     startActivity(new Intent(MainActivity.this, EnterPin.class));
                     finish();
                 }
 
             }
         }
-    }
+        else if (event.sensor.getType()== Sensor.TYPE_PROXIMITY){
+            if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
+                if (event.values[0] >= -SENSOR_SENSITIVITY && event.values[0] <= SENSOR_SENSITIVITY) {
+                    //near
+//                    Toast.makeText(getApplicationContext(), "near", Toast.LENGTH_SHORT).show();
+                } else if (pSwitchSet==1) {
+                    startActivity(new Intent(MainActivity.this, EnterPin.class));
+                    finish();
+                    //far
+//                    Toast.makeText(getApplicationContext(), "far", Toast.LENGTH_SHORT).show();
+
+                }
+            }
+        }
+        }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {

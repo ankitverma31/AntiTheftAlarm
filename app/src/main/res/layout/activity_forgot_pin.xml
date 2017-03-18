@@ -34,6 +34,6 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/input_layout_email"
         android:elevation="10dp"
-        android:text="SHOW PIN" />
+        android:text="SEND PIN" />
 
 </RelativeLayout>
