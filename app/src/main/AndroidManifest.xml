@@ -22,7 +22,8 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".SetPin"
-            android:noHistory="true">
+            android:noHistory="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

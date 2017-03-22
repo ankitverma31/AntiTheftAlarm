@@ -30,6 +30,7 @@
         android:id="@+id/btnSendPin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:theme="@style/MyButton"
         android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/input_layout_email"
