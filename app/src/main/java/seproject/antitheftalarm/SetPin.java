@@ -56,9 +56,6 @@ public class SetPin extends AppCompatActivity  {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_set_pin);
         etSetPin = (EditText) findViewById(R.id.etSetPin);
         etConfirmPin = (EditText)findViewById(R.id.etConfirmPin);
