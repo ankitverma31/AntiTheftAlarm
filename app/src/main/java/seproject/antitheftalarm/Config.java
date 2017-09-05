@@ -5,6 +5,6 @@ package seproject.antitheftalarm;
  */
 
 public class Config {
-    public static final String EMAIL ="virtualwalletuser@gmail.com";
-    public static final String PASSWORD ="wt_project_virtualwallet";
+    public static final String EMAIL ="your email";
+    public static final String PASSWORD ="your password";
 }
