@@ -67,19 +67,19 @@ public class EnterPin extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enter_pin);
 
-        final Vibrator vb = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        /*final Vibrator vb = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         long[] pattern = {0, 100, 1000};
-        vb.vibrate(pattern, 0);
+        vb.vibrate(pattern, 0);*/
 
         sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
         final String password = sharedpreferences.getString("passwordKey", "");
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-//        final MediaPlayer mPlayer = MediaPlayer.create(EnterPin.this, R.raw.siren);
-//        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-//        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 20, 0);
-//        mPlayer.start();
-//        mPlayer.setLooping(true);
+        final MediaPlayer mPlayer = MediaPlayer.create(EnterPin.this, R.raw.siren);
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 20, 0);
+        mPlayer.start();
+        mPlayer.setLooping(true);
         etEnterPin = (EditText) findViewById(R.id.etEnterPin);
         etEnterPin.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -88,8 +88,8 @@ public class EnterPin extends AppCompatActivity {
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
                     String pin = etEnterPin.getText().toString();
                     if (pin.equals(password)) {
-//                        mPlayer.stop();
-                        vb.cancel();
+                        mPlayer.stop();
+                        //vb.cancel();
                         startActivity(new Intent(EnterPin.this, MainActivity.class));
                         finish();
                         handled = true;
